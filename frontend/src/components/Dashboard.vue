@@ -3,10 +3,26 @@ export default {
   data() {
     return {
       internships: [],
+      showModal: false,
+      selectedInternship: null,
+      currentUserId: null,
     };
   },
-  mounted() {
+  async mounted() {
     this.fetchInternships();
+
+    try {
+      const res = await fetch('http://localhost:8000/api/profile', {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const user = await res.json();
+      this.currentUserId = user.id;
+    } catch (err) {
+      console.error('Gagal mengambil data user:', err);
+    }
   },
   methods: {
     async fetchInternships() {
@@ -40,7 +56,42 @@ export default {
     },
     handleImageError(event) {
       event.target.style.display = 'none';
-    }
+    },
+    openModal(intern) {
+      this.selectedInternship = { ...intern };
+      this.showModal = true;
+    },
+    async updateInternship() {
+      try {
+        const res = await fetch(`http://localhost:8000/api/internships/${this.selectedInternship.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            guru_id: this.selectedInternship.guru_id,
+            industri_id: this.selectedInternship.industri_id,
+            mulai: this.selectedInternship.mulai,
+            selesai: this.selectedInternship.selesai,
+          }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert('Data berhasil diperbarui');
+          this.fetchInternships();
+          this.showModal = false;
+        } else {
+          alert(data.message || 'Gagal memperbarui data');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Terjadi kesalahan saat mengupdate data');
+      }
+    },
+
   }
 }
 </script>
@@ -67,7 +118,12 @@ export default {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(intern, index) in internships" :key="intern.id" class="hover:bg-blue-50">
+            <tr
+              v-for="(intern, index) in internships"
+              :key="intern.id"
+              class="hover:bg-blue-50 cursor-pointer"
+              @click="openModal(intern)"
+            >
               <td class="px-4 py-2">{{ index + 1 }}</td>
               <td class="px-4 py-2">
                 <div class="flex items-center space-x-2">
@@ -93,11 +149,69 @@ export default {
               <td class="px-4 py-2">{{ intern.student.gender }}</td>
               <td class="px-4 py-2">{{ intern.industry.nama }}</td>
               <td class="px-4 py-2">{{ intern.teacher.nama }}</td>
-              <td class="px-4 py-2"> {{ formatPeriode(intern.mulai, intern.selesai) }} </td>
+              <td class="px-4 py-2">{{ formatPeriode(intern.mulai, intern.selesai) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </main>
+  </div>
+  <div v-if="showModal" class="fixed inset-0 flex items-center justify-center backdrop-brightness-50 bg-opacity-50 z-50">
+    <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
+      <h2 class="text-lg font-bold mb-4">Edit Data PKL</h2>
+
+      <label class="block mb-2">
+        Guru:
+        <input
+          v-model="selectedInternship.guru_id"
+          :readonly="selectedInternship.student.id !== currentUserId"
+          type="number"
+          class="w-full border rounded px-2 py-1"
+        />
+      </label>
+
+      <label class="block mb-2">
+        Industri:
+        <input
+          v-model="selectedInternship.industri_id"
+          :readonly="selectedInternship.student.id !== currentUserId"
+          type="number"
+          class="w-full border rounded px-2 py-1"
+        />
+      </label>
+
+      <label class="block mb-2">
+        Tanggal Mulai:
+        <input
+          v-model="selectedInternship.mulai"
+          :readonly="selectedInternship.student.id !== currentUserId"
+          type="date"
+          class="w-full border rounded px-2 py-1"
+        />
+      </label>
+
+      <label class="block mb-2">
+        Tanggal Selesai:
+        <input
+          v-model="selectedInternship.selesai"
+          :readonly="selectedInternship.student.id !== currentUserId"
+          type="date"
+          class="w-full border rounded px-2 py-1"
+        />
+      </label>
+
+      <div class="mt-4 flex justify-end space-x-2">
+        <button class="bg-gray-400 text-white px-4 py-2 rounded" @click="showModal = false">
+          Batal
+        </button>
+        <button
+          v-if="selectedInternship.student.id === currentUserId"
+          class="bg-blue-600 text-white px-4 py-2 rounded"
+          @click="updateInternship"
+        >
+          Simpan
+        </button>
+      </div>
+    </div>
   </div>
 </template>
