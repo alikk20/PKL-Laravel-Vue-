@@ -26,10 +26,10 @@ Route::get('/internships', function () {
     $internships = Internship::with(['student', 'teacher', 'industry'])->get();
     return response()->json($internships);
 });
-Route::middleware('auth:student')->get('/cekindustri', function (Request $request) {
-    $user = $request->user();
-    $hasIndustry = Industry::where('siswa_id', $user->id)->exists();
-    return response()->json(['hasIndustry' => $hasIndustry]);
+Route::middleware('auth:student')->get('internship/cek', function (Request $request) {
+    $student = $request->user();    
+    $sudahDaftar = Internship::where('siswa_id', $student->id)->exists(); // Cek apakah sudah pernah daftar PKL
+    return response()->json(['sudah_daftar' => $sudahDaftar]);
 });
 
 Route::post('/register-siswa', [AuthControllerStudent::class, 'registersiswa']);

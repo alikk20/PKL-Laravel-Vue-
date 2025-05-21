@@ -11,6 +11,7 @@ export default {
       showProfileModal: false,
       showIndustriModal: false,
       showPKLModal: false,
+      sudahDaftarPKL: false,
       form: {
         nama: '',
         nis: '',
@@ -54,6 +55,7 @@ export default {
 
       if (role === 'student') {
         this.idNumber = user.nis;
+        this.cekStatusPKL();
       } else if (role === 'teacher') {
         this.idNumber = user.nip;
       }
@@ -81,6 +83,27 @@ export default {
 
     toggleDropdown() {
       this.showDropdown = !this.showDropdown;
+    },
+
+    async cekStatusPKL() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const res = await fetch('http://localhost:8000/api/internship/cek', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!res.ok) throw new Error('Gagal cek status PKL');
+
+        const data = await res.json();
+        this.sudahDaftarPKL = data.sudah_daftar; // contoh: { sudah_daftar: true }
+
+      } catch (err) {
+        console.error('Error cek status PKL:', err);
+      }
     },
 
     async openProfileModal() {
@@ -167,7 +190,11 @@ export default {
       if (this.pageTitle === 'Data Industri') {
         this.showIndustriModal = true;
       } else if (this.pageTitle === 'Data Siswa PKL') {
-        this.showPKLModal = true;
+        if (this.sudahDaftarPKL) {
+          alert('Anda sudah mendaftar PKL.');
+        } else {
+          this.showPKLModal = true;
+        }
       }
     },
 
@@ -197,9 +224,8 @@ export default {
         if (!res.ok) throw new Error(data.message || 'Gagal Mendaftar PKL');
 
         alert('PKL berhasil didaftarkan!');
+        
         this.showPKLModal = false;
-
-        window.location.reload(); 
 
         this.pklForm = {
           industri_id: '',
@@ -258,6 +284,19 @@ export default {
     },
 
     async updateProfile() {
+
+      if (this.form.old_password || this.form.new_password || this.form.confirm_password) {
+        if (!this.form.old_password || !this.form.new_password || !this.form.confirm_password) {
+          alert("Isi semua kolom password untuk mengubah password.");
+          return;
+        }
+
+        if (this.form.new_password !== this.form.confirm_password) {
+          alert("Password baru dan konfirmasi tidak cocok.");
+          return;
+        }
+      }
+
       const token = localStorage.getItem('token');
       if (!token) {
         alert('Token tidak ditemukan! Harap login terlebih dahulu.');
@@ -285,7 +324,7 @@ export default {
         this.closeProfileModal();
 
         const updatedUser = JSON.parse(localStorage.getItem('user'));
-        updatedUser.email = this.form.email;
+        updatedUser.nis = this.form.nis;
         localStorage.setItem('user', JSON.stringify(updatedUser));
 
       } catch (err) {
@@ -344,11 +383,12 @@ export default {
   <!-- END NAVBAR & PROFILE -->
 
   <!-- JUDUL TABLE & DAFTAR -->
-  <div class="pb-4 flex justify-between items-center px-8">
+  <div class="pb-4 flex justify-between items-center px-8 py-4">
     <h1 class="text-xl font-bold text-gray-800">
         {{ pageTitle }}
     </h1>
       <button
+        v-if="role === 'student'"
         @click="handleDaftarClick"
         class="bg-blue-500 hover:bg-blue-600 text-xl font-bold text-white px-10 py-3 rounded-lg">
         Daftar

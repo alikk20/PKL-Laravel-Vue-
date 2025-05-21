@@ -3,6 +3,8 @@ export default {
   data() {
     return {
       internships: [],
+      teachers: [],
+      industries: [],
       showModal: false,
       selectedInternship: null,
       currentUserId: null,
@@ -10,6 +12,8 @@ export default {
   },
   async mounted() {
     this.fetchInternships();
+    this.fetchTeachers();
+    this.fetchIndustries();
 
     try {
       const res = await fetch('http://localhost:8000/api/profile', {
@@ -25,6 +29,30 @@ export default {
     }
   },
   methods: {
+    async fetchTeachers() {
+      try {
+        const res = await fetch('http://localhost:8000/api/teachers', {
+          headers: {
+            Accept: 'application/json',
+          },
+        });
+        this.teachers = await res.json();
+      } catch (error) {
+        console.error('Gagal fetch data guru:', error);
+      }
+    },
+    async fetchIndustries() {
+      try {
+        const res = await fetch('http://localhost:8000/api/industry', {
+          headers: {
+            Accept: 'application/json',
+          },
+        });
+        this.industries = await res.json();
+      } catch (error) {
+        console.error('Gagal fetch data industri:', error);
+      }
+    },
     async fetchInternships() {
       try {
         const res = await fetch('http://localhost:8000/api/internships', {
@@ -91,7 +119,32 @@ export default {
         alert('Terjadi kesalahan saat mengupdate data');
       }
     },
+    async deleteInternship() {
+      const konfirmasi = confirm("Apakah kamu yakin ingin menghapus data ini?");
+      if (!konfirmasi) return;
 
+      try {
+        const res = await fetch(`http://localhost:8000/api/internships/${this.selectedInternship.id}`, {
+          method: 'DELETE',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+
+        if (res.ok) {
+          alert('Data berhasil dihapus');
+          this.fetchInternships();
+          this.showModal = false; 
+        } else {
+          const data = await res.json();
+          alert(data.message || 'Gagal menghapus data');
+        }
+      } catch (err) {
+        console.error('Terjadi kesalahan saat menghapus:', err);
+        alert('Terjadi kesalahan saat menghapus data');
+      }
+    }
   }
 }
 </script>
@@ -99,7 +152,6 @@ export default {
 <template>
   <div class="flex min-h-screen bg-gradient-to-b from-blue-200 via-white to-indigo-200 text-gray-800">
     <SideBar />
-
     <main class="flex-1 p-8">
       <Info />
 
@@ -157,58 +209,40 @@ export default {
     </main>
   </div>
   <div v-if="showModal" class="fixed inset-0 flex items-center justify-center backdrop-brightness-50 bg-opacity-50 z-50">
-    <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
-      <h2 class="text-lg font-bold mb-4">Edit Data PKL</h2>
-
-      <label class="block mb-2">
-        Guru:
-        <input
-          v-model="selectedInternship.guru_id"
-          :readonly="selectedInternship.student.id !== currentUserId"
-          type="number"
-          class="w-full border rounded px-2 py-1"
-        />
-      </label>
-
-      <label class="block mb-2">
-        Industri:
-        <input
-          v-model="selectedInternship.industri_id"
-          :readonly="selectedInternship.student.id !== currentUserId"
-          type="number"
-          class="w-full border rounded px-2 py-1"
-        />
-      </label>
-
-      <label class="block mb-2">
-        Tanggal Mulai:
-        <input
-          v-model="selectedInternship.mulai"
-          :readonly="selectedInternship.student.id !== currentUserId"
-          type="date"
-          class="w-full border rounded px-2 py-1"
-        />
-      </label>
-
-      <label class="block mb-2">
-        Tanggal Selesai:
-        <input
-          v-model="selectedInternship.selesai"
-          :readonly="selectedInternship.student.id !== currentUserId"
-          type="date"
-          class="w-full border rounded px-2 py-1"
-        />
-      </label>
-
-      <div class="mt-4 flex justify-end space-x-2">
-        <button class="bg-gray-400 text-white px-4 py-2 rounded" @click="showModal = false">
-          Batal
+    <div class="bg-white p-6 rounded shadow-md w-full max-w-md relative">
+      <button class="absolute px-2 py-3 top-2 right-3 text-gray-500 hover:text-black text-2xl font-bold focus:outline-none" @click="showModal = false" aria-label="Tutup">
+        &times;
+      </button>
+        <h2 class="text-lg font-bold mb-4">Edit Data PKL</h2>
+          <label class="block mb-2">
+            Guru:
+            <select v-model="selectedInternship.guru_id" :disabled="selectedInternship.student.id !== currentUserId" class="w-full border px-3 py-2 rounded" :class="{ 'bg-gray-100': selectedInternship.student.id !== currentUserId }">
+              <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.id">
+                {{ teacher.nama }}
+              </option>
+            </select>
+          </label>
+          <label class="block mb-2">
+            Industri:
+            <select v-model="selectedInternship.industri_id" :disabled="selectedInternship.student.id !== currentUserId" class="w-full border px-3 py-2 rounded" :class="{ 'bg-gray-100': selectedInternship.student.id !== currentUserId }">
+              <option v-for="industry in industries" :key="industry.id" :value="industry.id">
+                {{ industry.nama }}
+              </option>
+            </select>
+          </label>
+          <label class="block mb-2">
+            Tanggal Mulai:
+            <input v-model="selectedInternship.mulai" :readonly="selectedInternship.student.id !== currentUserId" type="date" class="w-full border px-3 py-2 rounded" :class="{ 'bg-gray-100': selectedInternship.student.id !== currentUserId }"/>
+          </label>
+          <label class="block mb-2">
+            Tanggal Selesai:
+            <input v-model="selectedInternship.selesai" :readonly="selectedInternship.student.id !== currentUserId" type="date" class="w-full border px-3 py-2 rounded" :class="{ 'bg-gray-100': selectedInternship.student.id !== currentUserId }"/>
+          </label>
+      <div class="mt-4 flex justify-between space-x-2">
+        <button v-if="selectedInternship.student.id === currentUserId" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700" @click="deleteInternship">
+          Hapus
         </button>
-        <button
-          v-if="selectedInternship.student.id === currentUserId"
-          class="bg-blue-600 text-white px-4 py-2 rounded"
-          @click="updateInternship"
-        >
+        <button v-if="selectedInternship.student.id === currentUserId" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" @click="updateInternship">
           Simpan
         </button>
       </div>

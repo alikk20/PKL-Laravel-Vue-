@@ -124,7 +124,6 @@ export default {
 <template>
   <div class="flex min-h-screen bg-gradient-to-b from-blue-200 via-white to-indigo-200 text-gray-800">
     <SideBar />
-
     <main class="flex-1 p-8">
       <Info />
       <div class="overflow-x-auto bg-white rounded-lg shadow">
