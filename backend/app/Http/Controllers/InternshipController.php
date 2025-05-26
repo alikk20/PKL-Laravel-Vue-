@@ -10,7 +10,22 @@ use Illuminate\Support\Facades\Auth;
 
 class InternshipController extends Controller
 {
+    //Read Internships
+    public function show($id)
+    {
+        $internship = Internship::with(['industry:id,nama', 'teacher:id,nama'])
+            ->find($id);
 
+        if (!$internship) {
+            return response()->json(['message' => 'Data tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'message' => 'Detail data PKL',
+            'data' => $internship
+        ]);
+    }
+    //Create Internships
     public function store(Request $request)
     {
         $request->validate([
@@ -44,7 +59,7 @@ class InternshipController extends Controller
             return response()->json(['message' => 'Gagal menyimpan data', 'error' => $e->getMessage()], 500);
         }
     }
-
+    //Update Internships
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -89,7 +104,7 @@ class InternshipController extends Controller
             ], 500);
         }
     }    
-
+    //Delete Internships
     public function destroy($id)
     {
         $student = Auth::guard('student')->user();

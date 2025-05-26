@@ -4,10 +4,10 @@ namespace App\Models;
 
 use App\Models\Internship;
 use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class Teacher extends Model implements JWTSubject
+class Teacher extends Authenticatable implements JWTSubject
 {
     use HasRoles;
 
@@ -20,6 +20,10 @@ class Teacher extends Model implements JWTSubject
         'alamat',
         'kontak',
         'email',
+        'password',
+    ];
+
+    protected $hidden = [
         'password',
     ];
 

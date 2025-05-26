@@ -8,7 +8,21 @@ use Illuminate\Routing\Controller;
 
 class IndustryController extends Controller
 {
+    //Read Industri
+    public function show($id)
+    {
+        $industry = Industry::find($id);
 
+        if (!$industry) {
+            return response()->json(['message' => 'Data tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'message' => 'Detail data industri',
+            'data' => $industry
+        ]);
+    }
+    //Create Industri
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -29,7 +43,7 @@ class IndustryController extends Controller
     
         return response()->json(['message' => 'Created', 'data' => $industry], 201);
     }
-    
+    //Update Industri
     public function update(Request $request, $id)
     {
         $industry = Industry::findOrFail($id);
@@ -50,7 +64,7 @@ class IndustryController extends Controller
     
         return response()->json(['message' => 'Data updated successfully', 'data' => $industry]);
     }
-    
+    //Delete Industri
     public function destroy($id)
     {
         $industry = Industry::findOrFail($id);
