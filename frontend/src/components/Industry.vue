@@ -6,14 +6,37 @@ export default {
       selectedIndustry: null,
       showEditModal: false,
       currentUserId: null,
+      searchQuery: this.$route.query.search || '',
       apiUrl: 'http://localhost:8000/api/industry',
+      currentPage: 1,
+      itemsPerPage: 5,
     };
   },
   computed: {
-      isOwner() {
-        return this.selectedIndustry && this.selectedIndustry.siswa_id === this.currentUserId;
-      }
+    filteredIndustries() {
+      if (!this.searchQuery) return this.industries;
+
+      const keyword = this.searchQuery.toLowerCase();
+      return this.industries.filter(item => {
+      const namaIndustry = item.nama?.toLowerCase() || '';
+      const bidang_usahaIndustry = item.bidang_usaha?.toLowerCase() || '';
+      const alamatIndustry = item.alamat?.toLowerCase() || '';
+        return (
+          namaIndustry.includes(keyword) ||
+          bidang_usahaIndustry.includes(keyword) ||
+          alamatIndustry.includes(keyword)
+        );
+      });
     },
+    paginatedIndustries() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.filteredIndustries.slice(start, end);
+    },
+    totalPages() {
+      return Math.ceil(this.filteredIndustries.length / this.itemsPerPage);
+    }
+  },
   mounted() {
     this.fetchProfile().then(() => {
       this.fetchIndustries();
@@ -25,7 +48,6 @@ export default {
         const res = await fetch(this.apiUrl, {
           headers: {
             Accept: 'application/json',
-            // Authorization: 'Bearer <token_jika_perlu>',
           }
         });
         const data = await res.json();
@@ -116,8 +138,19 @@ export default {
         console.error('Gagal menghapus industri:', error);
         alert(error.message || 'Terjadi kesalahan saat menghapus.');
       }
+    },
+
+  },
+  watch: {
+    '$route.query.search'(val) {
+      this.searchQuery = val || '';
+    },
+    currentPage(val) {
+      if (val > this.totalPages) {
+        this.currentPage = this.totalPages || 1;
+      }
     }
-  }
+  },
 }
 </script>
 
@@ -139,8 +172,8 @@ export default {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(industry, index) in industries" :key="industry.id" class="hover:bg-blue-50"@click="openEditModal(industry)">
-              <td class="px-4 py-2">{{ index + 1 }}</td>
+            <tr v-for="(industry, index) in paginatedIndustries" :key="industry.id" class="hover:bg-blue-50 border-y-2 border-gray-200" @click="openEditModal(industry)">
+              <td class="px-4 py-2">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
               <td class="px-4 py-2">{{ industry.nama }}</td>
               <td class="px-4 py-2">{{ industry.bidang_usaha }}</td>
               <td class="px-4 py-2">{{ industry.alamat }}</td>
@@ -149,6 +182,25 @@ export default {
             </tr>
           </tbody>
         </table>
+                <div class="flex justify-center items-center p-4">
+          <button
+            class="px-3 py-1 bg-blue-500 text-white rounded disabled:opacity-50"
+            :disabled="currentPage === 1"
+            @click="currentPage--"
+          >
+            Prev
+          </button>
+
+          <span class="px-6">Page {{ currentPage }} of {{ totalPages }}</span>
+
+          <button
+            class="px-3 py-1 bg-blue-500 text-white rounded disabled:opacity-50"
+            :disabled="currentPage === totalPages"
+            @click="currentPage++"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </main>
   </div>

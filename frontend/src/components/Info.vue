@@ -6,15 +6,28 @@ export default {
       idNumber: '',
       role: '',
       image: '',
+      selectedImage: null,
+      searchQuery: this.$route.query.search || '',
       pageTitle: '',
       showDropdown: false,
       showProfileModal: false,
+      showProfileModalguru: false,
       showIndustriModal: false,
       showPKLModal: false,
       sudahDaftarPKL: false,
       form: {
         nama: '',
         nis: '',
+        email: '',
+        alamat: '',
+        kontak: '',
+        old_password: '',
+        new_password: '',
+        confirm_password: ''
+      },
+      formguru: {
+        nama: '',
+        nip: '',
         email: '',
         alamat: '',
         kontak: '',
@@ -69,6 +82,9 @@ export default {
   watch: {
     '$route'(to) {
       this.setPageTitle();
+    },
+    '$route.query.search'(val) {
+      this.search = val || '';
     }
   },
   methods: {
@@ -144,6 +160,105 @@ export default {
 
     closeProfileModal() {
       this.showProfileModal = false;
+    },
+
+    openProfileModalGuru() {
+      this.showProfileModalguru = true;
+      this.showDropdown = false;
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Token tidak ditemukan! Harap login terlebih dahulu.');
+        this.$router.push('/login');
+        return;
+      }
+
+      fetch('http://localhost:8000/api/profile/teacher', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        this.formguru.nama = data.nama || '';
+        this.formguru.nip = data.nip || '';
+        this.formguru.email = data.email || '';
+        this.formguru.alamat = data.alamat || '';
+        this.formguru.kontak = data.kontak || '';
+      })
+      .catch(error => {
+        alert('Gagal memuat data guru: ' + error.message);
+      });
+    },
+
+    async updateProfileGuru() {
+      if (this.formguru.old_password || this.formguru.new_password || this.formguru.confirm_password) {
+        if (!this.formguru.old_password || !this.formguru.new_password || !this.formguru.confirm_password) {
+          alert("Isi semua kolom password untuk mengubah password.");
+          return;
+        }
+
+        if (this.formguru.new_password !== this.formguru.confirm_password) {
+          alert("Password baru dan konfirmasi tidak cocok.");
+          return;
+        }
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Token tidak ditemukan! Harap login terlebih dahulu.');
+        this.$router.push('/login');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('nama', this.formguru.nama);
+      formData.append('nip', this.formguru.nip);
+      formData.append('email', this.formguru.email);
+      formData.append('alamat', this.formguru.alamat);
+      formData.append('kontak', this.formguru.kontak);
+
+      if (this.formguru.old_password) {
+        formData.append('old_password', this.formguru.old_password);
+        formData.append('new_password', this.formguru.new_password);
+        formData.append('confirm_password', this.formguru.confirm_password);
+      }
+
+      if (this.selectedImage) {
+        formData.append('foto', this.selectedImage);
+      }
+
+      formData.append('_method', 'PUT');
+
+      try {
+        const res = await fetch('http://localhost:8000/api/profile/teacher', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Gagal update profil');
+
+        alert(data.message);
+        this.closeProfileModalguru();
+
+        const updatedUser = JSON.parse(localStorage.getItem('user'));
+        updatedUser.nama = this.formguru.nama;
+        updatedUser.nip = this.formguru.nip;
+        if (data.image) {
+          updatedUser.image = data.image;
+        }
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    },
+
+    closeProfileModalguru() {
+      this.showProfileModalguru = false;
     },
 
     async submitIndustri() {
@@ -284,7 +399,6 @@ export default {
     },
 
     async updateProfile() {
-
       if (this.form.old_password || this.form.new_password || this.form.confirm_password) {
         if (!this.form.old_password || !this.form.new_password || !this.form.confirm_password) {
           alert("Isi semua kolom password untuk mengubah password.");
@@ -304,31 +418,67 @@ export default {
         return;
       }
 
+      const formData = new FormData();
+      formData.append('nama', this.form.nama);
+      formData.append('nis', this.form.nis);
+      formData.append('email', this.form.email);
+      formData.append('alamat', this.form.alamat);
+      formData.append('kontak', this.form.kontak);
+
+      if (this.form.old_password) {
+        formData.append('old_password', this.form.old_password);
+        formData.append('new_password', this.form.new_password);
+        formData.append('confirm_password', this.form.confirm_password);
+      }
+
+      if (this.selectedImage) {
+        formData.append('foto', this.selectedImage);
+      }
+
+      // Tambahkan ini agar Laravel tahu ini PUT
+      formData.append('_method', 'PUT');
+
       try {
         const res = await fetch('http://localhost:8000/api/profile', {
-          method: 'PUT',
+          method: 'POST', // masih POST tapi Laravel treat as PUT
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
+            // Tidak perlu 'Content-Type', browser akan set otomatis untuk FormData
           },
-          body: JSON.stringify(this.form)
+          body: formData
         });
 
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.message || 'Gagal update profil');
-        }
-
         const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Gagal update profil');
+
         alert(data.message);
         this.closeProfileModal();
 
         const updatedUser = JSON.parse(localStorage.getItem('user'));
+        updatedUser.nama = this.form.nama;
         updatedUser.nis = this.form.nis;
+        if (data.image) {
+          updatedUser.image = data.image;
+        }
         localStorage.setItem('user', JSON.stringify(updatedUser));
-
       } catch (err) {
         alert('Error: ' + err.message);
+      }
+
+    },
+
+    updateSearchQuery() {
+      this.$router.push({
+        path: this.$route.path,
+        query: { ...this.$route.query, search: this.searchQuery }
+      });
+    },
+
+    handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.selectedImage = file;
+        this.image = URL.createObjectURL(file);
       }
     },
 
@@ -371,6 +521,9 @@ export default {
           <button v-if="role === 'student'" @click="openProfileModal" class="block w-full text-left px-4 py-2 hover:bg-gray-100">
             Profile
           </button>
+          <button v-if="role === 'teacher'" @click="openProfileModalGuru" class="block w-full text-left px-4 py-2 hover:bg-gray-100">
+            Profile
+          </button>
           <li>
             <button @click="logout" class="block w-full text-left px-4 py-2 hover:bg-gray-100">
               Logout
@@ -382,18 +535,13 @@ export default {
   </div>
   <!-- END NAVBAR & PROFILE -->
 
-  <!-- JUDUL TABLE & DAFTAR -->
+  <!-- JUDUL TABLE SEARCH & DAFTAR -->
   <div class="pb-4 flex justify-between items-center px-8 py-4">
-    <h1 class="text-xl font-bold text-gray-800">
-        {{ pageTitle }}
-    </h1>
-      <button
-        v-if="role === 'student'"
-        @click="handleDaftarClick"
-        class="bg-blue-500 hover:bg-blue-600 text-xl font-bold text-white px-10 py-3 rounded-lg">
-        Daftar
-      </button>
+    <h1 class="text-xl font-bold text-gray-800">{{ pageTitle }}</h1>
+    <input v-model="searchQuery" @input="updateSearchQuery" type="text" placeholder="Cari..." class="bg-white w-100 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+    <button v-if="role === 'student'" @click="handleDaftarClick" class="bg-blue-500 hover:bg-blue-600 text-xl font-bold text-white px-10 py-3 rounded-lg"> Daftar </button>
   </div>
+
   <!-- MODAL DAFTAR PKL -->
   <div v-if="showPKLModal && pageTitle === 'Data Siswa PKL'" class="fixed inset-0 z-50 backdrop-brightness-50 flex items-center justify-center">
     <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-2xl relative">
@@ -440,6 +588,7 @@ export default {
     </div>
   </div>  
   <!-- END MODAL DAFTAR PKL -->
+
   <!-- Modal Daftar Industri -->
   <div v-if="showIndustriModal && pageTitle === 'Data Industri'" class="fixed inset-0 z-50 backdrop-brightness-50 flex items-center justify-center">
     <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-2xl relative">
@@ -477,11 +626,37 @@ export default {
   </div>
   <!-- END JUDUL TABLE & DAFTAR -->
 
-  <!-- MODAL PROFILE -->
+  <!-- MODAL PROFILE SISWA -->
   <div v-if="showProfileModal" class="fixed inset-0 backdrop-brightness-50 z-50 flex items-center justify-center">
     <div class="bg-white w-200 rounded-lg shadow-lg p-8 relative">
       <button @click="closeProfileModal" class="absolute top-2 right-3 text-gray-500 hover:text-black text-xl font-bold">×</button>
       <h2 class="text-xl font-bold mb-4">Profile</h2>
+      <div class="mb-6 text-center">
+        <div class="mb-2 flex justify-center">
+          <div v-if="preview || image" class="w-80 h-40 overflow-hidden border-2 border-black backdrop-brightness-50">
+            <img
+              :src="preview || image"
+              alt="Profile"
+              class="w-auto h-full mx-auto object-contain"
+            />
+          </div>
+          <div
+            v-else
+            class="w-24 h-24 rounded-full border-2 border-gray-800 bg-gray-300 text-black flex items-center justify-center font-semibold text-2xl"
+          >
+            {{ getInitials(form.nama) }}
+          </div>
+        </div>
+        <input
+            type="file"
+            @change="handleImageUpload"
+            class="block mx-auto text-sm file:mr-4 file:py-2 file:px-4
+                  file:rounded-full file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-blue-200 file:text-black
+                  hover:file:bg-blue-100 transition"
+          />
+      </div>
       <div class="flex gap-6">
         <!-- Kolom Kiri -->
         <div class="w-1/2 space-y-4">
@@ -539,7 +714,69 @@ export default {
 
     </div>
   </div>
-  <!-- END MODAL PROFILE -->
+  <!-- END MODAL PROFILE SISWA -->
 
-  
+  <!-- MODAL PROFILE GURU -->
+   <div v-if="showProfileModalguru" class="fixed inset-0 backdrop-brightness-50 z-50 flex items-center justify-center">
+    <div class="bg-white w-200 rounded-lg shadow-lg p-8 relative">
+      <button @click="closeProfileModalguru" class="absolute top-2 right-3 text-gray-500 hover:text-black text-xl font-bold">×</button>
+      <h2 class="text-xl font-bold mb-4">Profile</h2>
+
+      <div class="flex gap-6">
+        <!-- Kolom Kiri -->
+        <div class="w-1/2 space-y-4">
+          <div>
+            <label class="block text-sm font-medium">Name</label>
+            <input type="text" v-model="formguru.nama" class="w-full border px-3 py-2 rounded" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium">NIP</label>
+            <input type="text" v-model="formguru.nip" class="w-full border px-3 py-2 rounded" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium">Email Address</label>
+            <input type="email" v-model="formguru.email" class="w-full border px-3 py-2 rounded" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium">Alamat</label>
+            <input type="text" v-model="formguru.alamat" class="w-full border px-3 py-2 rounded" />
+          </div>
+        </div>
+
+        <!-- Kolom Kanan -->
+        <div class="w-1/2 space-y-4">
+          <div>
+            <label class="block text-sm font-medium">Kontak</label>
+            <input type="text" v-model="formguru.kontak" class="w-full border px-3 py-2 rounded" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium">Old Password</label>
+            <input type="password" v-model="formguru.old_password" class="w-full border px-3 py-2 rounded" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium">New Password</label>
+            <input type="password" v-model="formguru.new_password" class="w-full border px-3 py-2 rounded" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium">Confirm Password</label>
+            <input type="password" v-model="formguru.confirm_password" class="w-full border px-3 py-2 rounded" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Tombol Update -->
+      <div class="mt-6 text-right">
+        <button @click="updateProfileGuru" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+          Update Profile
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- END MODAL PROFILE GURU -->
 </template>

@@ -5,10 +5,24 @@ export default {
       internships: [],
       teachers: [],
       industries: [],
+      searchQuery: this.$route.query.search || '',
+      filteredInternships: [],
       showModal: false,
       selectedInternship: null,
       currentUserId: null,
+      currentPage: 1,
+      itemsPerPage: 5,
     };
+  },
+  computed: {
+    paginatedInternships() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.filteredInternships.slice(start, end);
+    },
+    totalPages() {
+      return Math.ceil(this.filteredInternships.length / this.itemsPerPage);
+    }
   },
   async mounted() {
     this.fetchInternships();
@@ -62,8 +76,31 @@ export default {
         });
         const data = await res.json();
         this.internships = data;
+        this.filterInternships();
       } catch (error) {
         console.error('Gagal fetch data internship:', error);
+      }
+    },
+    filterInternships() {
+      if (this.searchQuery) {
+        const keyword = this.searchQuery.toLowerCase();
+        this.filteredInternships = this.internships.filter(item => {
+          const namaSiswa = item.student?.nama?.toLowerCase() || '';
+          const genderSiswa = item.student?.gender?.toLowerCase() || '';
+          const namaGuru = item.teacher?.nama?.toLowerCase() || '';
+          const namaIndustri = item.industry?.nama?.toLowerCase() || '';
+          const tanggalMulai = item.mulai?.toLowerCase() || '';
+
+          return (
+            namaSiswa.includes(keyword) ||
+            genderSiswa.includes(keyword) ||
+            namaGuru.includes(keyword) ||
+            namaIndustri.includes(keyword) ||
+            tanggalMulai.includes(keyword)
+          );
+        });
+      } else {
+        this.filteredInternships = this.internships;
       }
     },
     formatPeriode(mulai, selesai) {
@@ -145,6 +182,12 @@ export default {
         alert('Terjadi kesalahan saat menghapus data');
       }
     }
+  },
+  watch: {
+    '$route.query.search'(newVal) {
+      this.searchQuery = newVal || '';
+      this.filterInternships();
+    }
   }
 }
 </script>
@@ -171,12 +214,12 @@ export default {
           </thead>
           <tbody>
             <tr
-              v-for="(intern, index) in internships"
+              v-for="(intern, index) in paginatedInternships"
               :key="intern.id"
-              class="hover:bg-blue-50 cursor-pointer"
+              class="hover:bg-blue-50 cursor-pointer border-y-2 border-gray-200"
               @click="openModal(intern)"
             >
-              <td class="px-4 py-2">{{ index + 1 }}</td>
+              <td class="px-4 py-2">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
               <td class="px-4 py-2">
                 <div class="flex items-center space-x-2">
                   <!-- Jika ada gambar profil -->
@@ -190,7 +233,7 @@ export default {
                   <!-- Jika tidak ada gambar profil, tampilkan inisial -->
                   <div
                     v-else
-                    class="w-10 h-10 rounded-full bg-gray-300 border-2 border-gray-800 text-black flex items-center justify-center font-semibold text-sm"
+                    class="w-13 h-13 rounded-full bg-gray-300 border-2 border-gray-800 text-black flex items-center justify-center font-semibold text-sm"
                   >
                     {{ getInitials(intern.student?.nama) }}
                   </div>
@@ -205,6 +248,25 @@ export default {
             </tr>
           </tbody>
         </table>
+        <div class="flex justify-center items-center p-4">
+          <button
+            class="px-3 py-1 bg-blue-500 text-white rounded disabled:opacity-50"
+            :disabled="currentPage === 1"
+            @click="currentPage--"
+          >
+            Prev
+          </button>
+
+          <span class="px-6">Page {{ currentPage }} of {{ totalPages }}</span>
+
+          <button
+            class="px-3 py-1 bg-blue-500 text-white rounded disabled:opacity-50"
+            :disabled="currentPage === totalPages"
+            @click="currentPage++"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </main>
   </div>
