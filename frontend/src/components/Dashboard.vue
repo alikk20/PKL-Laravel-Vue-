@@ -216,7 +216,7 @@ export default {
             <tr
               v-for="(intern, index) in paginatedInternships"
               :key="intern.id"
-              class="hover:bg-blue-50 cursor-pointer border-y-2 border-gray-200"
+              class="h-13 hover:bg-blue-50 cursor-pointer border-y-2 border-gray-200"
               @click="openModal(intern)"
             >
               <td class="px-4 py-2">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
@@ -241,7 +241,7 @@ export default {
               </td>
               <td class="px-4 py-2">{{ intern.student.nama }}</td>
               <td class="px-4 py-2">{{ intern.student.nis }}</td>
-              <td class="px-4 py-2">{{ intern.student.gender }}</td>
+              <td class="px-4 py-2">{{ intern.student.gender_desc }}</td>
               <td class="px-4 py-2">{{ intern.industry.nama }}</td>
               <td class="px-4 py-2">{{ intern.teacher.nama }}</td>
               <td class="px-4 py-2">{{ formatPeriode(intern.mulai, intern.selesai) }}</td>

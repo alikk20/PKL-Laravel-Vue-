@@ -26,7 +26,17 @@ Route::get('/teachers', function () {
 });
 
 Route::get('/internships', function () {
-    $internships = Internship::with(['student', 'teacher', 'industry'])->get();
+    $internships = Internship::with(['student', 'teacher', 'industry'])->get()->map(function ($internship) {
+        if ($internship->student) {
+            $internship->student->gender_desc = match ($internship->student->gender) {
+                'L' => 'Laki-laki',
+                'P' => 'Perempuan',
+                default => 'Tidak diketahui',
+            };
+        }
+        return $internship;
+    });
+
     return response()->json($internships);
 });
 

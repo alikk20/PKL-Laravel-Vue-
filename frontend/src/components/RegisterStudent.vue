@@ -77,8 +77,8 @@ export default {
             <label class="block text-sm font-medium mb-1">Jenis Kelamin</label>
             <select v-model="form.gender" class="w-full border rounded px-3 py-2">
               <option disabled value="">Pilih Jenis Kelamin</option>
-              <option value="Laki-laki">Laki-laki</option>
-              <option value="Perempuan">Perempuan</option>
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
             </select>
           </div>
 

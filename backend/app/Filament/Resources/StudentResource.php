@@ -50,8 +50,8 @@ class StudentResource extends Resource
                 Forms\Components\Select::make('gender')
                     ->label('Jenis Kelamin')
                     ->options([
-                        'Laki-laki' => 'Laki-laki',
-                        'Perempuan' => 'Perempuan',
+                        'L' => 'Laki-laki',
+                        'P' => 'Perempuan',
                     ])
                     ->required(),
                 Forms\Components\TextInput::make('alamat')
@@ -81,7 +81,8 @@ class StudentResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('nis')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('gender'),
+                Tables\Columns\TextColumn::make('gender_desc')
+                    ->label('Gender'),
                 Tables\Columns\TextColumn::make('alamat')
                     ->wrap()
                     ->searchable(),

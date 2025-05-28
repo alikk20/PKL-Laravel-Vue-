@@ -31,6 +31,15 @@ class Student extends Authenticatable implements JWTSubject
         return $this->hasMany(Internship::class);
     }
 
+    public function getGenderDescAttribute()
+    {
+        return match ($this->gender) {
+            'L' => 'Laki-laki',
+            'P' => 'Perempuan',
+            default => 'Tidak diketahui',
+        };
+    }
+
     // JWT implementation
     public function getJWTIdentifier()
     {

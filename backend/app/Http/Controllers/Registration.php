@@ -18,7 +18,7 @@ class Registration extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'id_number' => 'required|string|unique:students,nis',
-            'gender' => 'required|in:Laki-laki,Perempuan',
+            'gender' => 'required|in:L,P',
             'alamat' => 'required|string',
             'kontak' => 'required|string',
             'password' => 'required|min:6'
@@ -40,7 +40,7 @@ class Registration extends Controller
             ];
 
             $user = Student::create($data);
-            $user->assignRole('teacher');
+            $user->assignRole('student');
 
             return $user;
         });
@@ -57,7 +57,7 @@ class Registration extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'id_number' => 'required|string|unique:teachers,nip',
-            'gender' => 'required|in:Laki-laki,Perempuan',
+            'gender' => 'required|in:L,P',
             'alamat' => 'required|string',
             'kontak' => 'required|string',
             'password' => 'required|min:6'
