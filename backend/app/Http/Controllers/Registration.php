@@ -40,6 +40,7 @@ class Registration extends Controller
             ];
 
             $user = Student::create($data);
+            $user->assignRole('teacher');
 
             return $user;
         });
