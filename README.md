@@ -1,3 +1,13 @@
+-----DEPLOYMENT Backend-----
+1. git clone https://github.com/alikk20/PKL-Laravel-Vue-.git
+2. create db
+3. composer install
+4. config .env
+5. set sites-enabled apache
+6. sudo chown -R www-data:www-data /var/www/html/
+7. a2enmod rewrite, systemctl restart apache2
+
+-----PROJECT-----
 1. php artisan migrate
 2. php artisan key:generate
 3. php artisan jwt:secret -> JWT_SECRET= <token>
