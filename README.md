@@ -1,3 +1,8 @@
+Bahan
+1. php 8.3.21
+2. mariadb 10.11.11
+3. node 18.19.0
+
 -----DEPLOYMENT Backend-----
 1. git clone https://github.com/alikk20/PKL-Laravel-Vue-.git
 2. create db
