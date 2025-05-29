@@ -1,4 +1,5 @@
 <script>
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
 export default {
   data() {
     return {
@@ -63,7 +64,7 @@ export default {
       this.namaUser = user.nama;
       this.role = role;
       this.image = user.image 
-        ? `http://localhost:8000/storage/${user.image}` 
+        ? `${baseUrl}/storage/${user.image}` 
         : '';
 
       if (role === 'student') {
@@ -106,7 +107,7 @@ export default {
       if (!token) return;
 
       try {
-        const res = await fetch('http://localhost:8000/api/internship/cek', {
+        const res = await fetch(`${baseUrl}/internship/cek`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -134,7 +135,7 @@ export default {
       }
 
       try {
-        const response = await fetch('http://localhost:8000/api/profile', {
+        const response = await fetch(`${baseUrl}/profile`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -173,7 +174,7 @@ export default {
         return;
       }
 
-      fetch('http://localhost:8000/api/profile/teacher', {
+      fetch(`${baseUrl}/profile/teacher`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -231,7 +232,7 @@ export default {
       formData.append('_method', 'PUT');
 
       try {
-        const res = await fetch('http://localhost:8000/api/profile/teacher', {
+        const res = await fetch(`${baseUrl}/profile/teacher`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -270,7 +271,7 @@ export default {
       }
 
       try {
-        const res = await fetch('http://localhost:8000/api/industry', {
+        const res = await fetch(`${baseUrl}/industry`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -325,7 +326,7 @@ export default {
         const token = localStorage.getItem('token'); // misal disimpan di sini
           console.log('Token:', token);
 
-          const res = await fetch('http://localhost:8000/api/internships', {
+          const res = await fetch(`${baseUrl}/internships`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -360,10 +361,10 @@ export default {
       try {
         const token = localStorage.getItem('token');
         const [industriRes, guruRes] = await Promise.all([
-          fetch('http://localhost:8000/api/industry', {
+          fetch(`${baseUrl}/industry`, {
             headers: { 'Authorization': `Bearer ${token}` }
           }),
-          fetch('http://localhost:8000/api/teachers', {
+          fetch(`${baseUrl}/teachers`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
         ]);
@@ -381,7 +382,7 @@ export default {
 
     async fetchInternships() {
       try {
-        const response = await fetch('http://localhost:8000/api/internships');
+        const response = await fetch(`${baseUrl}/internships`);
         const data = await response.json();
         this.internships = data;
       } catch (error) {
@@ -439,7 +440,7 @@ export default {
       formData.append('_method', 'PUT');
 
       try {
-        const res = await fetch('http://localhost:8000/api/profile', {
+        const res = await fetch(`${baseUrl}/profile`, {
           method: 'POST', // masih POST tapi Laravel treat as PUT
           headers: {
             'Authorization': `Bearer ${token}`

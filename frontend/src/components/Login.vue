@@ -1,4 +1,6 @@
 <script>
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
 export default {
   data() {
     return {
@@ -14,7 +16,7 @@ export default {
   methods: {
     async login() {
       try {
-        const res = await fetch('http://localhost:8000/api/login', {
+        const res = await fetch(`${baseUrl}/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -25,20 +27,17 @@ export default {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Login gagal');
 
-        // Pastikan token disimpan dengan benar
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('role', data.role);
 
         if (!data.role) {
-          // Jika belum di-approve, arahkan ke halaman proses
           this.$router.push('/proses');
           return;
         }
 
         this.message = 'Login berhasil!';
         this.$router.push('/dashboard');
-
       } catch (err) {
         this.message = 'Gagal login: ' + err.message;
       }
@@ -68,7 +67,6 @@ export default {
     }
   }
 };
-
 </script>
 
 <template>

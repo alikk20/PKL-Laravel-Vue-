@@ -1,4 +1,5 @@
 <script>
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
 export default {
   data() {
     return {
@@ -16,7 +17,7 @@ export default {
   methods: {
     async register() {
       try {
-        const res = await fetch('http://localhost:8000/api/register-siswa', {
+        const res = await fetch(`${baseUrl}/register-siswa`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

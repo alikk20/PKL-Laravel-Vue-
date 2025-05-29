@@ -1,4 +1,5 @@
 <script>
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
 export default {
   data() {
     return {
@@ -7,7 +8,7 @@ export default {
       showEditModal: false,
       currentUserId: null,
       searchQuery: this.$route.query.search || '',
-      apiUrl: 'http://localhost:8000/api/industry',
+      apiUrl: `${baseUrl}/industry`,
       currentPage: 1,
       itemsPerPage: 5,
     };
@@ -60,7 +61,7 @@ export default {
     async fetchProfile() {
       const token = localStorage.getItem('token');
       try {
-        const res = await fetch('http://localhost:8000/api/profile', {
+        const res = await fetch(`${baseUrl}/profile`, {
           headers: {
             Accept: 'application/json',
             Authorization: `Bearer ${token}`,

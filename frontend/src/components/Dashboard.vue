@@ -1,4 +1,5 @@
 <script>
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
 export default {
   data() {
     return {
@@ -30,7 +31,7 @@ export default {
     this.fetchIndustries();
 
     try {
-      const res = await fetch('http://localhost:8000/api/profile', {
+      const res = await fetch(`${baseUrl}/profile`, {
         headers: {
           Accept: 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -45,7 +46,7 @@ export default {
   methods: {
     async fetchTeachers() {
       try {
-        const res = await fetch('http://localhost:8000/api/teachers', {
+        const res = await fetch(`${baseUrl}/teachers`, {
           headers: {
             Accept: 'application/json',
           },
@@ -57,7 +58,7 @@ export default {
     },
     async fetchIndustries() {
       try {
-        const res = await fetch('http://localhost:8000/api/industry', {
+        const res = await fetch(`${baseUrl}/industry`, {
           headers: {
             Accept: 'application/json',
           },
@@ -69,7 +70,7 @@ export default {
     },
     async fetchInternships() {
       try {
-        const res = await fetch('http://localhost:8000/api/internships', {
+        const res = await fetch(`${baseUrl}/internships`, {
           headers: {
             Accept: 'application/json',
           }
@@ -128,7 +129,7 @@ export default {
     },
     async updateInternship() {
       try {
-        const res = await fetch(`http://localhost:8000/api/internships/${this.selectedInternship.id}`, {
+        const res = await fetch(`${baseUrl}/internships/${this.selectedInternship.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -161,7 +162,7 @@ export default {
       if (!konfirmasi) return;
 
       try {
-        const res = await fetch(`http://localhost:8000/api/internships/${this.selectedInternship.id}`, {
+        const res = await fetch(`${baseUrl}/internships/${this.selectedInternship.id}`, {
           method: 'DELETE',
           headers: {
             Accept: 'application/json',
