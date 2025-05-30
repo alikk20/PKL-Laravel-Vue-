@@ -11,6 +11,7 @@ Bahan
 5. set sites-enabled apache
 6. sudo chown -R www-data:www-data /var/www/html/
 7. a2enmod rewrite, systemctl restart apache2
+8. apt install php libapache2-mod-php (error handle request)
 
 -----PROJECT-----
 1. php artisan migrate
